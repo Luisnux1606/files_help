@@ -1,0 +1,725 @@
+https://docs.djangoproject.com/en/2.0/ref/models/fields/#field-options : data type options
+https://docs.djangoproject.com/en/2.0/ref/models/fields/#field-types :  data types
+https://docs.djangoproject.com/en/2.0/ref/templates/builtins/#built-in-template-tags-and-filters :  template tags
+https://docs.djangoproject.com/en/2.0/ref/templates/builtins/#built-in-filter-reference
+
+
+0. virtual env : entorno virtual(entorno aislado)
+		
+
+1. framework for design web applications
+
+2. pip3 install virtualenv //This install an virtual environment for django using python.
+3. pip install django //this install django into the virtual environment
+
+4. django-admin startproject mysite //make a project 
+5. cd mysite //go into project      (into settings add the languaje)
+6. python manage.py startapp core//create an app polls for the project
+
+7. in view create a view to the petition
+
+from django.shortcuts import render, HttpResponse
+
+# Create your views here.
+def home(request):
+    return HttpResponse("<H1> my web</H1>")
+
+8. create url into app settings.py
+
+from django.contrib import admin
+from django.urls import path
+from core import views
+urlpatterns = [
+    path('',views.home, name="home")
+    path('admin/', admin.site.urls),
+]
+
+9 add a html base to add header and more urls and views
+
+views:
+******
+	from django.shortcuts import render, HttpResponse
+
+# Create your views here.
+html_base = """
+    <H1> My web personal</H1>
+    <ul>
+            <li><a href="/">Portada</a></li>
+            <li><a href="about">Acerca de</a></li>
+             <li><a href="portfolio">Portada</a></li>
+            <li><a href="contact">Acerca de</a></li>
+    </ul>
+"""
+
+def home(request):
+    return HttpResponse(html_base + """
+        <H2> Portada</H1>
+        <p>Esto es la portada</p>
+        """)
+
+def about(request):
+    return HttpResponse(html_base + """
+        <H2> Acerca de mi</H1>
+        <p>Me llamo Luis</p>
+        """)
+
+def portfolio(request):
+    return HttpResponse(html_base + """
+        <H2> Portfolio</H1>
+        <p>Mis trabajos</p>
+        """)
+
+def contact(request):
+    return HttpResponse(html_base + """
+        <H2> Contact</H1>
+        <p><a href = "mailto:luisenriquegonzalezd@gmail.com">luisenriquegonzalezd@gmailcom</a></p>
+        """)
+
+urls
+*****
+
+
+from django.contrib import admin
+from django.urls import path
+from core import views
+urlpatterns = [
+    path('',views.home, name="home"),
+    path('about',views.about, name="about"),
+    path('portfolio', views.portfolio, name="portfolio"),
+    path('contact', views.contact, name="contact"),
+    path('admin/', admin.site.urls),
+]
+
+10. using templates add the new folders into app core templates>core>home.html
+
+ <H1> My web personal</H1>
+    <ul>
+            <li><a href="/">Portada</a></li>
+            <li><a href="about">Acerca de</a></li>
+             <li><a href="portfolio">Portada</a></li>
+            <li><a href="contact">Acerca de</a></li>
+    </ul>
+11. add render in views 
+
+def home(request):
+    return render(request,"core/home.html")
+
+12. install the app in settings
+
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'core',
+]
+
+13. add templates to each section in templates>core>about;contact;home;portfolio.htmls
+
+about:
+****
+ <H1> My web personal</H1>
+    <ul>
+            <li><a href="/">Portada</a></li>
+            <li><a href="about">Acerca de</a></li>
+             <li><a href="portfolio">Portada</a></li>
+            <li><a href="contact">Acerca de</a></li>
+    </ul>
+
+  <H2> Acerca de mi</H1>
+        <p>Me llamo Luis</p>
+
+contact
+*****
+ <H1> My web personal</H1>
+    <ul>
+            <li><a href="/">Portada</a></li>
+            <li><a href="about">Acerca de</a></li>
+             <li><a href="portfolio">Portada</a></li>
+            <li><a href="contact">Acerca de</a></li>
+    </ul>
+
+  <H2> Contact</H1>
+        <p><a href = "mailto:luisenriquegonzalezd@gmail.com">luisenriquegonzalezd@gmailcom</a></p>
+
+home
+*****
+
+ <H1> My web personal</H1>
+    <ul>
+            <li><a href="/">Portada</a></li>
+            <li><a href="about">Acerca de</a></li>
+             <li><a href="portfolio">Portada</a></li>
+            <li><a href="contact">Acerca de</a></li>
+    </ul>
+
+portfolio
+********
+ <H1> My web personal</H1>
+    <ul>
+            <li><a href="/">Portada</a></li>
+            <li><a href="about">Acerca de</a></li>
+             <li><a href="portfolio">Portada</a></li>
+            <li><a href="contact">Acerca de</a></li>
+    </ul>
+
+ <H2> Portfolio</H1>
+        <p>Mis trabajos</p>
+
+14. create the file base.html in templates>core to make an extends of the code of header
+
+
+base.html
+****
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>My web personal</title>
+</head>
+<body>
+<!-- CABECERA Y MENU-->
+ <H1> My web personal</H1>
+    <ul>
+            <li><a href="/">Portada</a></li>
+            <li><a href="about">Acerca de</a></li>
+             <li><a href="portfolio">Portfolio</a></li>
+            <li><a href="contact">Acerca de</a></li>
+    </ul>
+<!--CONTENIDO -->
+
+    {%block content %}{% endblock %}
+</body>
+</html>
+
+15. create the logic of content with base.html and home.html using extends of django
+
+{% extends 'core/base.html' %}
+
+{%block content %}
+    <H2>PORTADA</H2>
+    <p>Esto es la portada</p>
+{% endblock %}
+
+
+16 . Create a block title to add template in base of the title as foolowing
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title> {%block title %}{% endblock %} | My web personal</title>
+</head>
+<body>
+<!-- CABECERA Y MENU-->
+ <H1>  My web personal</H1>
+    <ul>
+            <li><a href="/">Portada</a></li>
+            <li><a href="about">Acerca de</a></li>
+             <li><a href="portfolio">Portfolio</a></li>
+            <li><a href="contact">Contact</a></li>
+    </ul>
+<!--CONTENIDO -->
+
+    {%block content %}{% endblock %}
+</body>
+</html>
+
+17. from the other view  could be called the title block as extends of base and added some information as following "porfolio view"
+
+{% extends 'core/base.html' %}
+{%block title %} PORTFOLIO {% endblock %}
+{%block content %}
+ <H2> Portfolio</H1>
+    <p>Mis trabajos</p>
+{% endblock %}
+
+18. template tags{% url %} usefull to change url in urls.py and no change in views because use names of urls.
+	 
+19. Add the index of other template and change the things as about, home and others by the tags in base, later replace all of this index instead of base
+20. Create directory of folders static > core into the application to load the css js and others of the template (replace base.html for index.html of the template)
+21. add the clause {%load static %} and change the tags of css images and others for the tag {% static  'core ... 
+	
+22. add dinamycs the tag of the images with a block baground as following in the base.html
+	style="background-image: url('{%block background%} {%endblock %}')">
+23. add tag to load image in the previeous block from the home 
+
+{% extends 'core/base.html' %}
+
+{%block title %} HOME {% endblock %}
+
+{%static 'core/img/home-bg.jpg'%}
+
+{%block content %}
+    <H2>PORTADA</H2>
+    <p>Esto es la portada</p>
+{% endblock %} 
+
+24 . add block headers in the base.html dynamically
+
+<!-- Cabecera -->
+    <header class="masthead" style="background-image: url('{%block background%} {%endblock %}')">
+      <div class="overlay"></div>
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-md-10 mx-auto">
+            <div class="site-heading">
+              {% bock headers %}{% endblock %}
+              <h1>Juan Pérez</h1>
+              <span class="subheading">Ingeniero Industrial</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+25. add tag header and contents in base.html as following
+
+   </header>
+
+ <!-- Contenido -->
+
+    {%block content %}{% endblock %}
+
+    <!-- Pié de página -->
+
+26. add tag contens makig extends in home, contatc, about, portfolio as following 
+
+home
+-----
+
+{% extends 'core/base.html' %}
+
+{%block title %} HOME {% endblock %}
+
+{% block background %}{% load static %}{% static 'core/img/home-bg.jpg' %}{% endblock %}
+
+{% block headers %}
+     <h2>Portada</h2>
+{% endblock %}
+
+{% block content %}
+    <h1>Mis contenidos</h1>
+      <span class="subheading">contenidos</span>
+{% endblock %}
+
+27. using the format of a template ofr contact about etc, it is needed to change its according the template in my contact, about etc...
+28. Create a new application with name portfolio(to manage from the user)
+	python manage.py startapp portfolio
+29. in the modelss of the application porfolio add the next class
+
+class Project(models.Model):
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    image = models.ImageField()
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+30. add the application into settings.
+31. execute the next command
+python manage.py makemigrations
+32. python manage.py migrate
+32.1 add in admin as :
+	admin.site.register(Shop)
+33. PERSONALIZYNG THE ADMIN 
+in portfolio>apps.py add verbose name that is a extended configuration 
+
+from django.apps import AppConfig
+
+
+class PortfolioConfig(AppConfig):
+    name = 'portfolio'
+    verbose_name = 'Portafolio'
+
+34. add the extended configuration in settings
+
+# Application definition
+
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'core',
+    'portfolio.apps.PortfolioConfig',
+]
+
+35. changing the name of the project to spanish
+In the model add metadata to the project,classes, & filds
+from django.db import models
+
+# Create your models here.
+class Project(models.Model):
+    title = models.CharField(max_length=200, verbose_name="Titulo")
+    description = models.TextField(verbose_name="Descripcion")
+    image = models.ImageField(verbose_name="imagen")
+    created = models.DateTimeField(auto_now_add=True,verbose_name="fecha creacion")    #auto now django not show in admin
+    updated = models.DateTimeField(auto_now=True,verbose_name="fecha modificacion")
+
+    class Meta:
+        verbose_name = "proyecto"
+        verbose_name_plural = "proyectos"
+        ordering = ["-created"]
+
+    def __str__(self):
+        return self.title
+36. showing auto nows 
+IN class admin add the following
+
+from django.contrib import admin
+from .models import Project
+
+# Register your models here.
+class ProjectAdmin(admin.ModelAdmin):
+    readonly_fields = ('created','updated')
+
+admin.site.register(Project,ProjectAdmin)
+
+37. VALIDATING THE IMAGES
+IN SETTINGS ADD THE FOLLOWING(before create the directory media to add images from user to this folder)
+
+
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/2.1/howto/static-files/
+
+STATIC_URL = '/static/'
+
+#Media files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
+38. IN URLS.PY ADD
+
+"""webpersonal URL Configuration
+
+The `urlpatterns` list routes URLs to views. For more information please see:
+    https://docs.djangoproject.com/en/2.1/topics/http/urls/
+Examples:
+Function views
+    1. Add an import:  from my_app import views
+    2. Add a URL to urlpatterns:  path('', views.home, name='home')
+Class-based views
+    1. Add an import:  from other_app.views import Home
+    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
+Including another URLconf
+    1. Import the include() function: from django.urls import include, path
+    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+"""
+from django.contrib import admin
+from django.urls import path
+from core import views
+
+from django.conf import settings
+
+urlpatterns = [
+    path('',views.home, name="home"),
+    path('about',views.about, name="about"),
+    path('portfolio', views.portfolio, name="portfolio"),
+    path('contact', views.contact, name="contact"),
+    path('admin/', admin.site.urls),
+]
+
+if settings.DEBUG:
+    from django.conf.urls.static import static
+    urlpatterns += static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)
+
+39. ADD the view of portfolio from core to portfolio creating a templates>portfolio to have ordered the urls redefine the imports
+
+urls.py
+----------
+
+"""webpersonal URL Configuration
+
+The `urlpatterns` list routes URLs to views. For more information please see:
+    https://docs.djangoproject.com/en/2.1/topics/http/urls/
+Examples:
+Function views
+    1. Add an import:  from my_app import views
+    2. Add a URL to urlpatterns:  path('', views.home, name='home')
+Class-based views
+    1. Add an import:  from other_app.views import Home
+    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
+Including another URLconf
+    1. Import the include() function: from django.urls import include, path
+    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+"""
+from django.contrib import admin
+from django.urls import path
+from core import views as core_views
+from portfolio import views as portfolio_views
+
+from django.conf import settings
+
+urlpatterns = [
+    path('',core_views.home, name="home"),
+    path('about',core_views.about, name="about"),
+    path('portfolio', portfolio_views.portfolio, name="portfolio"),
+    path('contact', core_views.contact, name="contact"),
+    path('admin/', admin.site.urls),
+]
+
+if settings.DEBUG:
+    from django.conf.urls.static import static
+    urlpatterns += static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)
+
+40. TO WATCH THE PROJECT OF THE porftolio from portfolio view add
+portfolio view
+---------------
+
+from django.shortcuts import render
+from .models import Project
+# Create your views here.
+
+def portfolio(request):
+    projects = Project.objects.all()
+    return render(request, "portfolio/portfolio.html",{'projects':projects})
+
+41. IN portfolio html add the folowing to watch the information of the project
+
+
+ {% block content %}
+ {{projects}}
+	      <!-- Proyecto -->
+	      <div class="row project">
+
+42. dynamically agregation of image and description of projects in portfolio.html
+image.url add the url of the folder for the images that is media
+
+
+ {% block content %}
+	 {% for project in projects %}
+	      <!-- Proyecto -->
+	      <div class="row project">
+	      	<div class="col-lg-3 col-md-4 offset-lg-1">
+			      <img class="img-fluid" src="{{project.image.url}}" alt="">
+	      	</div>
+	        <div class="col-lg-7 col-md-8">
+	      		<h2 class="section-heading title">{{project.title}}</h2>
+	          <p>{{project.description}}</p>
+	          <p><a href="http://google.com">Más información</a></p>
+	      	</div>
+	      </div>
+	{%endfor%}
+{% endblock %}
+
+
+
+**************************************REVISION**************************************
+
+1 install virtual env; install django
+	pip3 install virtualenv
+	pip3 install django
+2. make the project 
+	django-admin startproject mysite
+3. into the project create the applications
+	python manage.py startapp core
+	python manage.py startapp portfolio
+4. create a view home, set urls.py, add app in settings.py, create base.htlm and aply extends using content block from base.html to home.html
+    * creating core>templates>core>home.html
+	<H1> My web personal</H1>
+    		<ul>
+            		<li><a href="/">Portada</a></li>
+            		<li><a href="about">Acerca de</a></li>
+             		<li><a href="portfolio">Portada</a></li>
+            		<li><a href="contact">Acerca de</a></li>
+    		</ul>
+    * create the url in urls.py
+	from django.contrib import admin
+	from django.urls import path
+	from core import views
+	urlpatterns = [
+    	path('admin/', admin.site.urls),
+    		path('',views.home,name="home"),
+	]
+	
+    * adding app in settings 
+	INSTALLED_APPS = [
+    	'django.contrib.admin',
+    	'django.contrib.auth',
+    	'django.contrib.contenttypes',
+    	'django.contrib.sessions',
+    	'django.contrib.messages',
+    	'django.contrib.staticfiles',
+    	'core',
+	]
+
+    * creating core>templates>core>base.html
+	
+	<!DOCTYPE html>
+	<html lang="es">
+	<head>
+	    <meta charset="UTF-8">
+	    <title>{%block title %}{% endblock %}| My web personal</title>
+	</head>
+	<body>
+	<!-- CABECERA Y MENU-->
+	 <H1> My web personal</H1>
+	    <ul>
+	            <li><a href="/">Portada</a></li>
+	            <li><a href="about">Acerca de</a></li>
+	             <li><a href="portfolio">Portfolio</a></li>
+	            <li><a href="contact">Acerca de</a></li>
+	    </ul>
+	<!--CONTENIDO -->
+	
+	    {%block content %}{% endblock %}
+	</body>
+	</html>
+
+     * applying extends using tags in home.html
+	{% extends 'core/base.html' %}
+	{%block title %}home{% endblock %}
+	{% block content %}
+	<h2>PORTADA</h2>
+	{% endblock %}
+5. copy the index code of a template and repalce by the base.html, in home, about and others do the same using extends and block header and block content
+6. load the static component {% load static %} to function the images
+7. configure the admin to view images, and change language and create models if it is necesary to manage some images dynamically and use admin.site.register(Shop)
+8. PERSONALIZYNG THE ADMIN 
+in apps.py of the app into the project add verbose name that is a extended configuration 
+
+from django.apps import AppConfig
+
+class PortfolioConfig(AppConfig):
+    name = 'portfolio'
+    verbose_name = 'Portafolio'
+
+9. add the extended configuration in settings
+
+# Application definition
+
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'core',
+    'portfolio.apps.PortfolioConfig',
+]
+10. using verbose nme for the filds, it is possible to use meta and str to change properties of the project from models as following
+
+from django.db import models
+
+# Create your models here.
+class Shop(models.Model):
+    status = models.CharField(max_length=10,verbose_name="Estado")
+    productImage = models.ImageField(verbose_name="imagen",upload_to="shops")#upload_to is to load in media directory to save the images of the user
+    name = models.CharField(max_length=100,verbose_name="nombre",null=True)
+    previewPrice = models.DecimalField(max_digits = 5, decimal_places = 2, verbose_name="precio anterior")
+    newPrice = models.DecimalField(max_digits = 5, decimal_places = 2, verbose_name="precio nuevo")
+    created = models.DateTimeField(auto_now_add=True, verbose_name="fecha creacion")
+    updated = models.DateTimeField(auto_now=True, verbose_name="fecha actualizacion")
+
+
+    class Meta:
+        verbose_name = "compra"
+        verbose_name_plural = "compras"
+        ordering = ['-created']
+
+    def __str__(self):
+        return self.name
+11. Showing the auto_nows filds in the admin is possible from admin.py as:
+
+from django.contrib import admin
+from .models import Shop
+
+# Register your models here.
+class ShopAdmin(admin.ModelAdmin):
+    readonly_fields = ('created','updated')
+
+admin.site.register(Shop,ShopAdmin)
+
+12. Enable the admin to watch images 
+
+VALIDATING THE IMAGES
+IN SETTINGS ADD THE FOLLOWING(before create the directory media to add images from user to this folder)
+
+
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/2.1/howto/static-files/
+
+STATIC_URL = '/static/'
+
+#Media files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
+13. IN URLS.PY ADD
+
+"""webpersonal URL Configuration
+
+The `urlpatterns` list routes URLs to views. For more information please see:
+    https://docs.djangoproject.com/en/2.1/topics/http/urls/
+Examples:
+Function views
+    1. Add an import:  from my_app import views
+    2. Add a URL to urlpatterns:  path('', views.home, name='home')
+Class-based views
+    1. Add an import:  from other_app.views import Home
+    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
+Including another URLconf
+    1. Import the include() function: from django.urls import include, path
+    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+"""
+from django.contrib import admin
+from django.urls import path
+from core import views
+
+from django.conf import settings
+
+urlpatterns = [
+    path('',views.home, name="home"),
+    path('about',views.about, name="about"),
+    path('portfolio', views.portfolio, name="portfolio"),
+    path('contact', views.contact, name="contact"),
+    path('admin/', admin.site.urls),
+]
+
+if settings.DEBUG:
+    from django.conf.urls.static import static
+    urlpatterns += static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)
+14.  TO WATCH THE dynamically images  and information saved from admin
+portfolio view
+---------------
+
+from django.shortcuts import render
+from .models import Project
+# Create your views here.
+
+def portfolio(request):
+    projects = Project.objects.all()
+    return render(request, "portfolio/portfolio.html",{'projects':projects})
+
+15. IN portfolio html add the folowing to watch the information of the project
+
+
+ {% block content %}
+ {{projects}}
+	      <!-- Proyecto -->
+	      <div class="row project">
+
+16. dynamically agregation of image and description of projects in portfolio.html
+image.url add the url of the folder for the images that is media
+
+
+ {% block content %}
+	 {% for project in projects %}
+	      <!-- Proyecto -->
+	      <div class="row project">
+	      	<div class="col-lg-3 col-md-4 offset-lg-1">
+			      <img class="img-fluid" src="{{project.image.url}}" alt="">
+	      	</div>
+	        <div class="col-lg-7 col-md-8">
+	      		<h2 class="section-heading title">{{project.title}}</h2>
+	          <p>{{project.description}}</p>
+	          <p><a href="http://google.com">Más información</a></p>
+	      	</div>
+	      </div>
+	{%endfor%}
+{% endblock %}

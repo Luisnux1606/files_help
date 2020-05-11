@@ -1,0 +1,1095 @@
+************curso django2 webempresa********
+0. ps auxw |greep runserver and kill if it is necesary
+1. django-admin startproject webempresa
+2. python manage.py startapp core
+3. create the views and urls
+
+views.py
+////////
+from django.shortcuts import render,HttpResponse
+
+# Create your views here.
+def home(request):
+    return HttpResponse("<h1>home</h1>")
+
+def about(request):
+    return HttpResponse("<h1>about</h1>")
+
+def services(request):
+    return HttpResponse("<h1>services</h1>")
+
+def store(request):
+    return HttpResponse("<h1>store</h1>")
+
+def contact(request):
+    return HttpResponse("<h1>contact</h1>")
+
+def blog(request):
+    return HttpResponse("<h1>blog</h1>")
+
+def sample(request):
+    return HttpResponse("<h1>blog</h1>")
+
+urls.py
+--------
+
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+
+    path('home/', views.home,name="home" ),
+    path('about/', views.about,name="about"),
+    path('services/', views.services,name="services"),
+    path('store/', views.store,name="store"),
+    path('contact/', views.contact,name="contact"),
+    path('blog/', views.blog,name="blog"),
+]
+
+4. separate urls creating urls.py into the app core and invoque from urls.py from project
+
+urls.py(core)
+--------
+from django.urls import path
+from . import views
+urlpatterns = [
+
+    # paths of the core
+    path('home/', views.home, name="home"),
+    path('about/', views.about, name="about"),
+    path('services/', views.services, name="services"),
+    path('store/', views.store, name="store"),
+    path('contact/', views.contact, name="contact"),
+    path('blog/', views.blog, name="blog"),
+    path('sample/', views.sample, name="sample"),
+]
+urls.py (project)
+-----------------
+
+from django.contrib import admin
+from django.urls import path,include
+from core import views
+
+urlpatterns = [
+    #paths of the admin
+    path('admin/', admin.site.urls),
+
+    path('', include('core.urls')),
+
+]
+5. use {%extends 'core/base.html'%} and {%url 'services'%} to do the replaces of base, home, contacts and others and program color of menu that chuoose with {%if request.path%}  
+6. configuring the admin for images and others
+	create directory media
+	settings create MEDIA_URL,MEDIA_ROOT
+	in urls.py add if settings.DEBUG:
+	create services using startapp
+	create a model with verbose names and meta classs and def str
+	do makemigrations and migrate
+	cretate superuser
+	make created updated to show in admin adding  in admin class serviceAdmin(admin.ModelAdmin) and register
+	add in spanish in settings
+	in apps.py add vebose name
+	in settings use the name of the services.apps.servicesconfig
+	
+7. make the services dynamically using for in templates and passing objets from views of services as following:
+template
+----------
+{% for service in services reversed %}
+
+views
+-----
+def services(request):
+    services = Service.objects.all();
+    return render(request,"services/services.html",{'services':services})
+
+
+**************CREATING APP BLOG******************
+
+1 creating appblog with startapp , create model Category,Post, add models in admin, using manytomany
+
+from django.db import models
+from django.utils.timezone import now
+from django.contrib.auth.models import  User
+# Create your models here.
+
+class Category(models.Model):
+    name = models.CharField(max_length=200,verbose_name="nombre")
+    created = models.DateTimeField(auto_now=True, verbose_name="creado")
+    updated = models.DateTimeField(auto_now=True, verbose_name="actualizado")
+
+    class Meta:
+        verbose_name = "categoria"
+        verbose_name_plural = "categorias"
+        ordering = ['-created']
+
+    def __str__(self):
+        return self.name
+
+class Post(models.Model):
+    title = models.CharField(max_length=200,verbose_name="titulo")
+    content = models.TextField(verbose_name="Contenido")
+    published = models.DateTimeField(verbose_name="Fecha de publicacion",default=now)
+    image = models.ImageField(verbose_name="imagen", upload_to="blog", null=True,blank=True)
+    author = models.ForeignKey(User,verbose_name="Autor",on_delete=models.CASCADE)
+    categories = models.ManyToManyField(Category,verbose_name="Categorias")
+    created = models.DateTimeField(auto_now=True, verbose_name="creado")
+    updated = models.DateTimeField(auto_now=True, verbose_name="actualizado")
+
+    class Meta:
+        verbose_name = "entrada"
+        verbose_name_plural = "entradas"
+        ordering = ['-created']
+
+    def __str__(self):
+        return self.title 
+
+
+adding in the admin
+------------
+
+
+class CategoryAdmin(admin.ModelAdmin):
+    readonly_fields = ('created','updated')
+
+class PostAdmin(admin.ModelAdmin):
+    readonly_fields = ('created','updated')
+
+admin.site.register(Category, CategoryAdmin)
+admin.site.register(Post, PostAdmin)
+
+2. personalization of the class post to show more info in admin
+
+class PostAdmin(admin.ModelAdmin):
+    readonly_fields = ('created','updated')
+    list_display = ('title','author','published','post_categories')
+    ordering = ('author','published')
+    search_fields = ('title','content','author__username','categories__name')
+    date_hierarchy = 'published'
+    list_filter = ('author__username','categories__name')
+
+    def post_categories(self,obj):
+        return ",".join([c.name for c in obj.categories.all().order_by('name')] )
+    post_categories.short_description = "Categorias"
+    
+3. adding entries or post in blogs dynamically in blog template, first set all in the correct place, views,templates...
+
+views of blog
+--------------
+from django.shortcuts import render
+from .models import Post
+# Create your views here.
+def blog(request):
+    posts = Post.objects.all()
+    return render(request,"blog/blog.html",{'posts':posts})
+
+
+template of blog
+----------------
+
+{%extends 'core/base.html'%}
+{%block title%}Blog{%endblock%}
+{%load static%}
+
+{%block content%}
+  {% for post in posts%}
+      <section class="page-section cta">
+        <div class="container">
+          <div class="row">
+            <div class="col-xl-9 mx-auto">
+              <div class="cta-innerv text-center rounded">
+                <h2 class="section-heading mb-5">
+                  <span class="section-heading-upper">{{post.published|date:"SHORT_DATE_FORMAT"}}</span>
+                  <span class="section-heading-lower">{{post.title}}</span>
+                </h2>
+                <p class="mb-0">
+                  <img class="mx-auto d-flex rounded img-fluid mb-3 mb-lg-0" src="{{post.image.url}}" alt="">
+                </p>
+                <p class="mb-0 mbt">
+                  {{post.content|linebreaks}}
+                </p>
+                <p class="mb-0 mbt">
+                  <span class="section-heading-under">Publicado por <em><b>{{post.author}}</b></em> en <em>
+                    <!--<a href="#" class="link">General</a>,<a href="#" class="link">Ofertas</a></em></span>-->
+                    {%for category in post.categories.all%}
+                       {{category.name}}{%if not forloop.last%},{%endif%}
+                    {%endfor%}
+                </p>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </section>
+  {%endfor%}
+{%endblock%}
+
+4. recuperating categories(manytomanyfild)
+
+model.py
+---------
+from django.db import models
+from django.utils.timezone import now
+from django.contrib.auth.models import  User
+# Create your models here.
+
+class Category(models.Model):
+    name = models.CharField(max_length=200,verbose_name="nombre")
+    created = models.DateTimeField(auto_now=True, verbose_name="creado")
+    updated = models.DateTimeField(auto_now=True, verbose_name="actualizado")
+
+    class Meta:
+        verbose_name = "categoria"
+        verbose_name_plural = "categorias"
+        ordering = ['-created']
+
+    def __str__(self):
+        return self.name
+
+class Post(models.Model):
+    title = models.CharField(max_length=200,verbose_name="titulo")
+    content = models.TextField(verbose_name="Contenido")
+    published = models.DateTimeField(verbose_name="Fecha de publicacion",default=now)
+    image = models.ImageField(verbose_name="imagen", upload_to="blog", null=True,blank=True)
+    author = models.ForeignKey(User,verbose_name="Autor",on_delete=models.CASCADE)
+    categories = models.ManyToManyField(Category,verbose_name="Categorias",related_name="get_posts")
+    created = models.DateTimeField(auto_now_add=True, verbose_name="creado")
+    updated = models.DateTimeField(auto_now=True, verbose_name="actualizado")
+
+    class Meta:
+        verbose_name = "entrada"
+        verbose_name_plural = "entradas"
+        ordering = ['-created']
+
+    def __str__(self):
+        return self.title
+
+
+views.py
+---------
+from django.shortcuts import render, get_object_or_404
+from .models import Post,Category
+# Create your views here.
+def blog(request):
+    posts = Post.objects.all()
+    return render(request,"blog/blog.html",{'posts':posts})
+
+def category(request,category_id):
+    category = get_object_or_404(Category,id=category_id)
+    posts = Post.objects.filter(categories = category)
+    return render(request,"blog/category.html",{'category':category})
+
+
+category.html
+--------------
+{%extends 'core/base.html'%}
+{%block title%}Blog{%endblock%}
+{%load static%}
+
+{%block content%}
+  {% for post in category.get_posts.all%}
+      <section class="page-section cta">
+        <div class="container">
+          <div class="row">
+            <div class="col-xl-9 mx-auto">
+              <div class="cta-innerv text-center rounded">
+                <h2 class="section-heading mb-5">
+                  <span class="section-heading-upper">{{post.published|date:"SHORT_DATE_FORMAT"}}</span>
+                  <span class="section-heading-lower">{{post.title}}</span>
+                </h2>
+                <p class="mb-0">
+                  <img class="mx-auto d-flex rounded img-fluid mb-3 mb-lg-0" src="{{post.image.url}}" alt="">
+                </p>
+                <p class="mb-0 mbt">
+                  {{post.content|linebreaks}}
+                </p>
+                <p class="mb-0 mbt">
+                  <span class="section-heading-under">Publicado por <em><b>{{post.author}}</b></em> en <em>
+                    <!--<a href="#" class="link">General</a>,<a href="#" class="link">Ofertas</a></em></span>-->
+                    <em>
+                      {%for category in post.categories.all%}
+                      <a href="{%url 'category' category.id%}"  class="link">{{category.name}}</a>{%if not forloop.last%},{%endif%}
+                      {%endfor%}
+                    </em>
+                  </span>
+                </p>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </section>
+  {%endfor%}
+{%endblock%}
+
+blog.html
+------------
+{%extends 'core/base.html'%}
+{%block title%}Blog{%endblock%}
+{%load static%}
+
+{%block content%}
+  {% for post in posts%}
+      <section class="page-section cta">
+        <div class="container">
+          <div class="row">
+            <div class="col-xl-9 mx-auto">
+              <div class="cta-innerv text-center rounded">
+                <h2 class="section-heading mb-5">
+                  <span class="section-heading-upper">{{post.published|date:"SHORT_DATE_FORMAT"}}</span>
+                  <span class="section-heading-lower">{{post.title}}</span>
+                </h2>
+                <p class="mb-0">
+                  <img class="mx-auto d-flex rounded img-fluid mb-3 mb-lg-0" src="{{post.image.url}}" alt="">
+                </p>
+                <p class="mb-0 mbt">
+                  {{post.content|linebreaks}}
+                </p>
+                <p class="mb-0 mbt">
+                   <span class="section-heading-under">Publicado por <em><b>{{post.author}}</b></em> en <em>
+                    <!--<a href="#" class="link">General</a>,<a href="#" class="link">Ofertas</a></em></span>-->
+                    <em>
+                      {%for category in post.categories.all%}
+                      <a href="{%url 'category' category.id%}"  class="link">{{category.name}}</a>{%if not forloop.last%},{%endif%}
+                      {%endfor%}
+                    </em>
+                  </span>
+
+                </p>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </section>
+  {%endfor%}
+{%endblock%}
+
+****************************************APP SOCIAL********************************************************
+python manage.py startapp social
+
+model.py
+-----------
+
+from django.db import models
+
+# Create your models here.
+class Link(models.Model):
+    key = models.SlugField(verbose_name="Nombre Clave",max_length=100,unique=True)
+    name = models.CharField(verbose_name="Red social",max_length=200)
+    url = models.URLField(verbose_name="Enlace",max_length=200, null=True, blank=True)
+    created = models.DateTimeField(auto_now_add=True,verbose_name="Fecha de creacion")
+    updated = models.DateTimeField(auto_now=True,verbose_name="Fecha de edicion")
+
+    class Meta:
+        verbose_name = "enlace"
+        verbose_name_plural = "enlaces"
+        ordering = ['-created']
+
+    def __str__(self):
+        return self.name
+
+apps.py
+----------
+
+from django.apps import AppConfig
+
+
+class SocialConfig(AppConfig):
+    name = 'social'
+    verbose_name = 'Redes sociales'
+
+admin.py
+---------
+
+
+from django.contrib import admin
+from .models import Link
+
+# Register your models here.
+class LinkAdmin(admin.ModelAdmin):
+    readonly_fields = ('created','updated')
+
+admin.site.register(Link,LinkAdmin)
+
+settings.py
+------------
+
+
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'blog',
+    'core',
+    'services.apps.ServicesConfig',
+    'social.apps.SocialConfig',
+
+]
+
+*****************************************CONTEXT PROCESSORS****************************************
+new information common for some templates using dictionarys 
+
+5. creating the model and adding information using the admin
+
+model.py
+----------
+
+
+from django.db import models
+
+# Create your models here.
+class Link(models.Model):
+    key = models.SlugField(verbose_name="Nombre Clave",max_length=100,unique=True)
+    name = models.CharField(verbose_name="Red social",max_length=200)
+    url = models.URLField(verbose_name="Enlace",max_length=200, null=True, blank=True)
+    created = models.DateTimeField(auto_now_add=True,verbose_name="Fecha de creacion")
+    updated = models.DateTimeField(auto_now=True,verbose_name="Fecha de edicion")
+
+    class Meta:
+        verbose_name = "enlace"
+        verbose_name_plural = "enlaces"
+        ordering = ['-created']
+
+    def __str__(self):
+        return self.name
+
+
+
+6. create file processors.py  to add a dictionary of context 
+-----------------
+
+from .models import Link
+
+def ctx_dict(request):
+    ctx = {} #ctx = {'text':'hola'}
+    links = Link.objects.all()
+    for link in links:
+        ctx[link.key] = link.url
+    return ctx
+
+
+7. in file settings.py  add the dictionry of context 
+
+
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+                'social.processors.ctx_dict',
+            ],
+        },
+    },
+]
+
+8. using the key names like LINK_FACEBOOK, LINK_INSTAGRAM AND LINK_TWITTER to call the url if it exist
+
+base.html
+----------
+
+
+ <!-- Pi√© de p√°gina -->
+    <footer class="footer text-faded text-center py-5">
+      <div class="container">
+
+        <p class="m-0">
+            {% if LINK_TWITER %}
+	        <a href="{{LINK_TWITER}}" class="link">
+	          <span class="fa-stack fa-lg">
+	            <i class="fa fa-circle fa-stack-2x"></i>
+	            <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+	          </span>
+	        </a>
+            {% endif %}
+             {% if LINK_FACEBOOK %}
+	        <a href="{{LINK_FACEBOOK}}" class="link">
+	          <span class="fa-stack fa-lg">
+	            <i class="fa fa-circle fa-stack-2x"></i>
+	            <i class="fa fa-facebook fa-stack-1x fa-inverse"></i>
+	          </span>
+	        </a>
+            {% endif %}
+             {% if LINK_INSTAGRAM %}
+
+
+*****************************************APP  PAGES**********************************************************
+
+creating the model.py
+----------------------
+
+from django.db import models
+
+# Create your models here.
+class Page(models.Model):
+
+    title = models.CharField(verbose_name="Titulo",max_length=200)
+    content = models.TextField(verbose_name="Contenido")
+    created = models.DateTimeField(auto_now_add=True,verbose_name="Fecha de creacion")
+    updated = models.DateTimeField(auto_now=True,verbose_name="Fecha de edicion")
+
+    class Meta:
+        verbose_name = "pagina"
+        verbose_name_plural = "paginas"
+        ordering = ['-title']
+
+    def __str__(self):
+        return self.title
+
+
+creating the view.py
+---------------------
+
+from django.shortcuts import render,get_object_or_404
+from .models import Page
+
+# Create your views here.
+def page(request,page_id):
+    page = get_object_or_404(Page,id=page_id)
+    return render(request,'pages/sample.html',{'page':page})
+
+
+creating the urls.py
+---------------------
+
+from django.urls import path
+from . import views
+urlpatterns = [
+    path('<int:page_id>/', views.page, name="page"),
+]
+
+
+creating the apps.py
+---------------------
+
+from django.apps import AppConfig
+
+
+class PagesConfig(AppConfig):
+    name = 'pages'
+    verbose_name = 'Gestor de paginas'
+
+
+creating the admin.py
+----------------------
+from django.contrib import admin
+from .models import Page
+
+# Register your models here.
+class PageAdmin(admin.ModelAdmin):
+    readonly_fields = ('created','updated')
+
+
+creating the template sample.py
+
+{%extends 'core/base.html'%}
+{%block title%}Sample{%endblock%}
+{%load static%}
+
+{%block content%}
+    <section class="page-section about-heading">
+      <div class="container">
+        <div class="about-heading-content mbtm">
+          <div class="row">
+            <div class="col-xl-9 col-lg-10 mx-auto">
+              <div class="bg-faded rounded p-5 forced">
+                <h2 class="section-heading mb-4">
+                  <span class="section-heading-lower">{{page.title}}</span>
+                </h2>
+                <div class="section-content">{{page.content|linebreaks}}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+{%endblock%}
+
+
+using urls.py of the project overall
+-------------------------------------
+
+"""webempresa URL Configuration
+
+The `urlpatterns` list routes URLs to views. For more information please see:
+    https://docs.djangoproject.com/en/2.2/topics/http/urls/
+Examples:
+Function views
+    1. Add an import:  from my_app import views
+    2. Add a URL to urlpatterns:  path('', views.home, name='home')
+Class-based views
+    1. Add an import:  from other_app.views import Home
+    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
+Including another URLconf
+    1. Import the include() function: from django.urls import include, path
+    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+"""
+from django.contrib import admin
+from django.urls import path,include
+from core import views
+from django.conf import settings
+urlpatterns = [
+    #paths of the admin
+    path('admin/', admin.site.urls),
+    #pahts de core
+    path('', include('core.urls')),
+    #paths de services
+    path('services/', include('services.urls')),
+    #paths de blog
+    path('blog/', include('blog.urls')),
+    #paths de pages
+    path('page/', include('pages.urls')),
+
+]
+
+if settings.DEBUG:
+    from django.conf.urls.static import static
+    urlpatterns += static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)
+
+admin.site.register(Page,PageAdmin)
+
+
+*****************************************OWN TEMPLATE TAGS IN PAGES**********************************************************
+creating directory templatetags>pages_extras.py and templatetags>__init__.py. In pages_extras.py add:
+------------------------------------------------------------------------------------------------------
+
+from django import template
+from ..models import Page
+
+register = template.Library()
+
+@register.simple_tag   #register the function in library as a simple_tag
+def get_page_list():
+    pages = Page.objects.all()
+    return pages
+
+in any template file of any app in the proect like base.html could be used the template tag as following:
+---------------------------------------------------------------------------------------------------------
+   -->
+            {% load pages_extras %}
+            {% get_page_list as page_list %}
+            {% for page in page_list %}
+               <a href="{% url 'page' page.id page.title|slugify%}" class="link"> {{page.title}} </a>{% if not forloop.last %}∑{% endif %}
+            {% endfor %}
+
+adding parameters urls.py
+-------------------------
+from django.urls import path
+from . import views
+urlpatterns = [
+    path('<int:page_id>/<slug:page_slug>', views.page, name="page"),
+]
+
+
+
+
+******************************ordering of title of texts in a template page using admin model***************************
+
+editing the model adding new fild order 
+---------------------------------------
+
+from django.db import models
+
+# Create your models here.
+class Page(models.Model):
+
+    title = models.CharField(verbose_name="Titulo",max_length=200)
+    content = models.TextField(verbose_name="Contenido")
+    order = models.SmallIntegerField(verbose_name="Orden", default=0)
+    created = models.DateTimeField(auto_now_add=True,verbose_name="Fecha de creacion")
+    updated = models.DateTimeField(auto_now=True,verbose_name="Fecha de edicion")
+
+    class Meta:
+        verbose_name = "pagina"
+        verbose_name_plural = "paginas"
+        ordering = ['order','-title']
+
+    def __str__(self):
+        return self.title
+
+
+watching the order fild from admin
+--------------------------------- 
+
+from django.contrib import admin
+from .models import Page
+
+# Register your models here.
+class PageAdmin(admin.ModelAdmin):
+    readonly_fields = ('created','updated')
+    list_display = ('title','order')
+admin.site.register(Page,PageAdmin)
+
+
+using the tag and for as following django automatically order the filds 
+----------------------------------------------------------------------
+ {% load pages_extras %}
+            {% get_page_list as page_list %}
+            {% for page in page_list %}
+               <a href="{% url 'page' page.id page.title|slugify%}" class="link"> {{page.title}} </a>{% if not forloop.last %}∑{% endif %}
+            {% endfor %}
+
+using if user authenticated to show edit and carry to admin edition
+------------------------------------------------------------------------
+ <div class="section-content">
+                  {{page.content|linebreaks}}
+                  {% if user.is_authenticated%}
+                    <p><a href="{% url 'admin:pages_page_change' page.id %}">Editar</a> </p>
+                  {% endif %}
+                </div>
+
+****************************************PERSONALIZING THE ADMIN****************************************************
+install the app for django 
+-------------------------
+pip install django-ck-editor
+
+
+add in the apps like installed
+------------------------------
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'blog',
+    'ckeditor',
+    'core',
+    'pages.apps.PagesConfig',
+    'services.apps.ServicesConfig',
+    'social.apps.SocialConfig',
+]
+
+add a configuration in final of settings.py
+--------------------------------------------
+
+# Ckeditor
+
+CKEDITOR_CONFIGS = {
+    'default': {
+        'toolbar': 'Custom',
+        'toolbar_Custom': [
+            ['Bold', 'Italic', 'Underline'],
+            ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'],
+            ['Link', 'Unlink'],
+        ]
+    }
+}
+
+indicating in the template that content is safe to watch changes made from admin using bolds, italics underlines etc etc.
+--------------------------------------------
+
+<div class="section-content">
+                  {{page.content|safe}}
+                  {% if user.is_authenticated%}
+                    <p><a href="{% url 'admin:pages_page_change' page.id %}">Editar</a> </p>
+                  {% endif %}
+                </div>
+
+**********************************************FORMS************************************************************
+creating the app contact and add in settings so create urls.py and configure with the urls project 
+creating file forms.py and adding necesary to form wit attrs to set bootstrap class 
+-----------------------------------------------------------------------------------
+from django import forms
+
+class ContactForms(forms.Form):
+    name = forms.CharField(label="Nombre", required=True,widget=forms.TextInput(
+        attrs={'class':'form-control','placeholder':'Escribe tu nombre aqui'} #attrs is to give a class of bootstrap  to char
+    ),min_length=3 , max_length= 100)
+    email =forms.EmailField(label="Email",required=True, widget=forms.EmailInput(
+        attrs={'class':'form-control','placeholder':'Escribe tu email aqui'}
+    ),min_length=3 , max_length= 100)
+    content = forms.CharField(label="Contenido",required=True, widget=forms.Textarea(
+        attrs={'class':'form-control','rows':3,'placeholder':'Escribe tu msg aqui'}
+    ),min_length=10 , max_length= 100)
+
+creating the view.py
+--------------------------
+
+from django.shortcuts import render,redirect
+from django.urls import reverse
+from .forms import ContactForms
+# Create your views here.
+def contact(request):
+    #print("Tipo de peticion: {}".format(request.method))
+    contact_form = ContactForms()  #create the form in base of form
+
+    if request.method == "POST":    #if the request is post
+        contact_form = ContactForms(data=request.POST)#fill template of form with filds
+        if contact_form.is_valid():
+            name = request.POST.get('name','')   #recuperate data of filds
+            email = request.POST.get('email', '')
+            content = request.POST.get('content', '')
+            #if all is ok
+           # return redirect('/contact/?ok')
+            return redirect(reverse('contact')+"?ok")  #reverse is to go the link of contact with param ok to validate in template
+    return render(request,"contact/contact.html",{'form':contact_form})
+
+
+creating the template contact.html
+-------------------------
+{%extends 'core/base.html'%}
+{%block title%}Contact{%endblock%}
+{%load static%}
+{%block content%}
+    <section class="page-section about-heading">
+      <div class="container">
+        <img class="img-fluid rounded about-heading-img mb-3 mb-lg-0" src="{%static 'core/img/contact.jpg'%}" alt="">
+        <div class="about-heading-content">
+          <div class="row">
+            <div class="col-xl-9 col-lg-10 mx-auto">
+              <div class="bg-faded rounded p-5">
+                <h2 class="section-heading mb-4">
+                  <span class="section-heading-upper">Env√≠anos tus dudas</span>
+                  <span class="section-heading-lower">Contacto</span>
+                </h2>
+
+                <!-- Formulario de contacto -->
+
+                  {% if 'ok' in request.GET %}
+                  <p><b>Su me saje ok, en breve nos contactaremos.</b></p>
+                  {% endif %}
+
+                  <!-- action void same validate itself in the view -->
+                 <!-- <form action="" method="POST">
+                       {% csrf_token %}
+                      <table>
+                            {{form.as_table}}
+                      </table>
+                      <input type="submit" value="Enviar"/>
+                  </form>-->
+                 <!-- {{request.POST}}
+                   {{request.GET}} -->
+                <form action="" method="POST">
+                     {% csrf_token %}
+                    <div class="form-group">
+                        <label>Nombre *</label>
+                        <div class="input-group">
+                            {{form.name}}
+                        </div>
+                            {{form.name.errors}}
+                    </div>
+                    <div class="form-group">
+                        <label>Email *</label>
+                        <div class="input-group">
+                            {{form.email}}
+                        </div>
+                            {{form.email.errors}}
+
+                    </div>
+                    <div class="form-group">
+                        <label>Mensaje *</label>
+                        <div class="input-group">
+                            {{form.content}}
+                        </div>
+                            {{form.content.errors}}
+                    </div>
+                    <div class="text-center">
+                        <input type="submit" class="btn btn-primary btn-block py-2" value="Enviar">
+                    </div>
+                </form>
+            <!-- Fin formulario de contacto -->
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+{%endblock%}
+
+
+configurate the urls of project and contact 
+--------------------------------------------
+
+urls contact
+------------
+ path('', views.contact, name="contact"),
+-----------------------
+
+
+
+******************************SENDING MAIL************************************
+
+creting the field in the view
+-----------------------------
+
+from django.shortcuts import render,redirect
+from django.urls import reverse
+from django.core.mail import EmailMessage
+from .forms import ContactForms
+
+# Create your views here.
+def contact(request):
+    #print("Tipo de peticion: {}".format(request.method))
+    contact_form = ContactForms()
+
+    if request.method == "POST":
+        contact_form = ContactForms(data=request.POST)#fill template of form with filds
+        if contact_form.is_valid():
+            name = request.POST.get('name','')
+            email = request.POST.get('email', '')
+            content = request.POST.get('content', '')
+
+            email = EmailMessage(
+                    "La caffetiera : nuevo mensaje asunto",
+                    "cuerpo De{}<{}>\n\nEscribio:\n\n{}".format(name,email,content),
+                    "origen, no contestar@inbox.mailtrap.io",
+                    ["luisenriquegonzalezd@gmail.com"],
+                    reply_to=[email]
+            )
+            try:
+                email.send()
+                return redirect(reverse('contact')+"?ok")
+            except:
+                return redirect(reverse('contact')+"?fail")
+            #if all is ok
+           # return redirect('/contact/?ok')
+            return redirect(reverse('contact')+"?ok")
+    return render(request,"contact/contact.html",{'form':contact_form})
+
+
+creating the configuration in settings.py using mailtrap
+-----------------------------------------
+
+# MAIL CONFIG
+
+EMAIL_HOST = 'smtp.mailtrap.io'
+EMAIL_HOST_USER = 'eba7b0ec959a1f'
+EMAIL_HOST_PASSWORD = '46d90e8599c5ae'
+EMAIL_PORT = '2525'
+
+
+*****************************************PERSONALIZING THE ADMIN******************************************
+
+creating groups to add acces to some actions
+----------------------------------------------
+create user add privileges to some apps create or delete etc.
+it is possible to acces with that user to do somethings but not all
+
+creating posibiliy to watch some filds as editable using admin.py of any app
+-----------------------------------------------------------------------------
+
+from django.contrib import admin
+from .models import Link
+
+# Register your models here.
+class LinkAdmin(admin.ModelAdmin):
+    readonly_fields = ('created','updated')
+
+    def get_readonly_fields(self, request, obj=None):
+        if request.user.groups.filter(name="Personal").exists():
+            return ('created','updated','key','name')
+        else:
+            return ('created','updated')
+admin.site.register(Link,LinkAdmin)
+
+
+
+
+
+*******************installing django debian configurating vim*************************
+
+sudo apt-get install python3
+sudo apt-get install -y python3-pip
+pip3 install virtualenv
+
+apt-get install python-virtualenv
+
+virtualenv -p /home/example_username/opt/python-3.6.2/bin/python3 my_project       #use python3 to virtualenv in myproject
+
+source my_project/bin/activate
+deactivate
+
+rm -rf my_project  # to eliminate
+
+apt-get install vim
+mkdir ~/.vim
+cd ~/.vim
+mkdir autoload	
+mkdir bundle
+
+cd autoload
+git clone https://github.com/tpope/vim-pathogen.git
+
+vim ~/.vimrc     #to configurate add the following
+
+set nocompatible
+filetype plugin indent on
+syntax on
+execute pathogen#infect()
+
+
+
+later to install aplugin 
+
+cd ~/.vim/bundle
+git clone https://github.com/vim-airline/vim-airline
+
+**************NERDTREE****************
+in vimrc :map <C-n> :NERDTree       # to configurate with nfile
+switching cursor : ctrl+w
+tabs : t and gt
+open and closing files or directories : (m)
+r to update the directory
+
+*************installing jedi**********
+apt-get install vim-gtk
+
+
+**************VIM MOVING*******************
+v and cursor to select lines, y to copy and p to past
+w go next word b back word $ end 0 begining 
+( sentence { paragraph
+G end of file 1G beginning of the file
+dw delete word
+yw copy a word
+
+************SCREEN DIVIDIN Terminal***************
+screen
+CTRL+a S #horizontal
+CTRL+a I #vertical
+CTRL+a Q #unsplit
+ctrl+a tab to switch betwen screens
+
+CTRL+a c to new session terminal
+CTRL+a: resize 10
+ctrl+a | # divide vertical
+ctrl+a X #to close window subdivided
+
+
+10 ctrl-w+       - increase window size by 10 lines
+ :vsplit file     - vertical split
+ :sview file      - same as split, but readonly
+ :hide            - close current window
+ctrl +w v # to suvdivide vertiacal
+ctrl +w c #to close window
+:vsp filename #open new file vertical
+
+****************YOUCOMPLETEME PLUGIN first install ultisnips **************
+cd ~/.vim/bundle
+git clone https://github.com/Valloric/YouCompleteMe.git
+cd YouCompleteMe
+git submodule update --init --recursive
+ctrl+n
+
+****************EMMET to html**************
+ctrl+y , 
+
+div.container>p#foo>a      : build a lass with container later a p with id foo later a href
+div>p#foo$*5          : build a div with p and p wit id since 1 until five
+
+*******************DJANGO SNIPPETS*****************************
+dbt    django block title
+dbc    django bloc content
+dex    django extends
+dlo    django load static

@@ -1,0 +1,691 @@
+Django 
+
+1. framework for design web applications
+
+2. pip3 install virtualenv //This install an virtual environment for django using python.
+3. pip install django //this install django into the virtual environment
+
+4. django-admin startproject mysite //make a project 
+5. cd mysite //go into project
+6. python manage.py startapp polls //create an app polls for the project
+
+
+/*******************************************
+7. # Create the models
+from django.db import models
+
+class Question(models.Model):
+    question_text = models.CharField(max_length = 100)
+    pub_date = models.DateTimeField('date published')
+
+class Choice(models.Model):
+    choice_text = models.CharField(max_length = 200)
+    votes = models.IntegerField(default = 0)
+    question = models.ForeignKey(Question, on_delete = models.CASCADE)
+/*************************************************
+
+8. add the installed app in settings.py
+9. python manage.py makemigrations polls  //for build changes in models
+10.python manage.py migrage //to run migrations and create de db in sqlite(default) or other
+/**************************************************************************
+11. python manage.py shell //to get the sheel of python
+12. import django   //to publi the database
+13. django.setup()  //allow acces the database values
+14. from polls.models import Question, Choise
+15. Question.objects.all() //to see questions
+16. from django.utils import timezone
+17. q = Question(question_text = "What's your name", pub_date = timezone.now()) //to save a Question
+18. q.save()
+19. Question.objects.all()
+20. add return string for question and choice in models
+/***************************************
+from django.db import models
+
+class Question(models.Model):
+    question_text = models.CharField(max_length = 100)
+    pub_date = models.DateTimeField('date published')
+
+	def _str_(self):
+		return self.question_text
+
+
+class Choice(models.Model):
+    choice_text = models.CharField(max_length = 200)
+    votes = models.IntegerField(default = 0)
+    question = models.ForeignKey(Question, on_delete = models.CASCADE)
+	
+	def _str_(self):
+		return self.question_text
+/**************************
+21. exit()  //from console and do same commandas again
+22. python manage.py shell
+23. import django
+24. django.setup()
+25. from polls.models import Question,Choice
+26. Question.objects.all()
+27. q = Question.objects.get(pk=1)
+28. q.choice_set.create(choice_text = "bob",votes = 0)
+29. q.choice_set.create(choice_text = "rachel",votes = 0)
+30. q.save() //to save in datbase 31.1) exit()
+31. too activate the super user
+	python manage.py createsuper
+32. python manage.py runserver ///to run on server 
+33 go to admin.py
+	from .models import Questions, Choice
+	admin.site.register(Question) //to register in the admin
+	admin.site.register(Choice)  //to register in the admin
+/**********************************************************************
+34. //go to urls.py of project (add some content in a web page, and how set data)
+   //if urls isnot in urls could acces to the web site
+   //connect urls with views
+
+/*******************************************
+from django.conf.urls import url, include
+from django.contrib import admin
+
+urlpatterns = [
+   url(r'^admin/', admin.site.urls),
+    url(r'^polls/', include('polls.urls')),
+]
+/***********************************************
+35. go to create urls.py in polls and add
+from django.conf.urls import url
+from . import views  //to import of the same folder
+
+urlpatterns = [
+
+    url(r'^$',views.index,name="index"),  //this could contain anithing as ' #127.0.0.1/polls/' later show index
+    #127.0.0.1/polls/
+]
+36. // addin information for a form, create views. in views.py
+/*******************
+def index(request):
+    return HttpResponse('Awesome, this index page')
+
+def detail(request, question_id):
+    return HttpResponse('this is the detail of the question %s'% question_id)
+
+def results(request, question_id):
+    return HttpResponse('these are the results of the question %s'% question_id)
+
+def vote(request, question_id):
+    return HttpResponse('Vote on question %s'% question_id)
+/******************************************************
+37. add the three news urls from the views in polls/urls.py to could have acces for those
+
+from django.conf.urls import url
+from . import views
+
+urlpatterns = [
+
+    url(r'^$',views.index,name="index"),
+    #127.0.0.1/polls/
+    url(r'^(?P<question_id>[0-9]+)/$', views.detail, name="detail"),
+    #127.0.0.1/polls/?
+    url(r'^(?P<question_id>[0-9]+)/results$', views.results(), name="results"),
+    #127.0.0.1/polls/1/results
+    url(r'^(?P<question_id>[0-9]+)/vote$', views.detail, name="vote"),
+]
+38.add model data in view and set to hattp response. In views.py add
+/**************************************************
+from django.shortcuts import render
+
+from django.http import HttpResponse
+from .models import  Question
+# Create your views here.
+
+def index(request):
+    latest_questions = Question.objects.order_by('-pub_date')[:5]  //to show five questions
+    output = ", ".join(q.question_text for q in latest_questions)  //to join the questions text of the q iterator
+    return HttpResponse(output)
+
+def detail(request, question_id):
+    return HttpResponse("this is the detail of the question %s"% question_id)
+
+def results(request, question_id):
+    return HttpResponse("these are the results of the question %s"% question_id)
+
+def vote(request, question_id):
+    return HttpResponse("Vote on question %s"% question_id)
+/******************************************************************
+39. to add template to click in a question and show in diferent page 
+    create a directory "templates" in to app. and add
+/****************************
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+{% if latest_questions %}
+    <ul>
+        {% for question in latest_questions %}  //to iterate in variable latest_questions
+            <li><a href = '/polls/{{question.id}}'><b>{{question.question_text}}</b></a></li>   //to set an id as link 
+        {%endfor%}
+    </ul>
+{% else %}
+    <p>You don't have any questions.Please add some.</p>
+{% endif %}
+/***************
+
+</body>
+</html>
+40. so to link index with the before file.
+in views add.
+/*******************************************
+from django.shortcuts import render
+
+from django.http import HttpResponse
+from django.template import loader, RequestContext
+from .models import  Question
+# Create your views here.
+
+def index(request):
+    latest_questions = Question.objects.order_by('-pub_date')[:5]
+
+    context = {         //read the variable latest_questions
+        'latest_questions':latest_questions
+
+    }
+    template = loader.get_template('polls/index.html').render(context)   //render the value of variables
+    return HttpResponse(template)
+
+def detail(request, question_id):
+    return HttpResponse("this is the detail of the question %s"% question_id)
+
+def results(request, question_id):
+    return HttpResponse("these are the results of the question %s"% question_id)
+
+def vote(request, question_id):
+    return
+
+---------------------------SECOND WAY----------------------------
+
+from django.shortcuts import render
+
+from django.http import HttpResponse
+from django.template import loader, RequestContext
+from .models import  Question
+# Create your views here.
+
+def index(request):
+    latest_questions = Question.objects.order_by('-pub_date')[:5]
+    context = {'latest_questions':latest_questions}
+    return render(request,'polls/index.html',context)
+
+def detail(request, question_id):
+    return HttpResponse("this is the detail of the question %s"% question_id)
+
+def results(request, question_id):
+    return HttpResponse("these are the results of the question %s"% question_id)
+
+def vote(request, question_id):
+    return HttpResponse("Vote on question %s"% question_id)
+
+/********************************************
+//////////////////////////////////////////7777777/////////////////////////////////////////////////
+41. It's usefull to get results or choices of a questions.
+     in views add
+/*****************************************
+from django.shortcuts import render
+
+from django.http import HttpResponse
+from django.template import loader, RequestContext
+from .models import  Question
+# Create your views here.
+
+def index(request):
+    latest_questions = Question.objects.order_by('-pub_date')[:5]
+    context = {'latest_questions':latest_questions}
+    return render(request,'polls/index.html',context)
+
+def detail(request, question_id):
+    question = Questions.objects.get(pk = question_id)
+    return render(request,'polls/detail.html',{'question':question})
+
+def results(request, question_id):
+    return HttpResponse("these are the results of the question %s"% question_id)
+
+def vote(request, question_id):
+    return HttpResponse("Vote on question %s"% question_id)
+/*****************************************
+
+42. create the template detail.html in polls adding
+/**********************
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<h1>{{question.question_text}} </h1>
+
+<ul>
+    {% for choice in question.choice_set.all %}    #to print choices of a questions
+    <li> {{choice.choice_text}} </li>
+    {% endfor%}
+</ul>
+
+</body>
+</html>
+/************************
+43. to improve content html. Add base.html in polls templates
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+{% block main_content %}
+{% endblock %}
+
+</body>
+</html>
+44. add the blocks main and end in views detail and index as following
+in detail.html: 
+/*********************
+{% extends 'polls/base.html' %}
+{% block main_content %}
+<h1>{{question.question_text}} </h1>
+
+<ul>
+    {% for choice in question.choice_set.all %}
+    <li> {{choice.choice_text}} </li>
+    {% endfor%}
+</ul>
+
+{% endblock %}
+/**********************
+into index.html 
+
+{% extends 'polls/base.html '%}
+{% block main_content %}
+
+{% if latest_questions %}
+    <ul>
+        {% for question in latest_questions %}
+            <li><a href = '/polls/{{question.id}}'><b>{{question.question_text}}</b></a></li>
+        {%endfor%}
+    </ul>
+{% else %}
+    <p>You don't have any questions.Please add some.</p>
+{% endif %}
+
+{% endblock %}
+
+45. also it's posible create an footer.html and add a footer as:
+/*********
+<hr>
+<p> Footer </p>
+</hr>
+/**********
+46. the foother would be added into base.html as following:
+/*************
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<hr>
+<p> Header</p>
+<hr>
+
+{% block main_content %}
+{% endblock %}
+{% include "polls/footer.html" %}
+
+</body>
+</html>
+/*************
+47. ////////////////////////////8888888888/////////////////////////
+To add a form , first change the way to call href in index.html
+/******************
+{% extends 'polls/base.html '%}
+{% block main_content %}
+
+{% if latest_questions %}
+    <ul>
+        {% for question in latest_questions %}
+            <li><a href = {% url "detail" question.id%}><b>{{question.question_text}}</b></a></li> #to call view detail
+        {%endfor%}
+    </ul>
+{% else %}
+    <p>You don't have any questions.Please add some.</p>
+{% endif %}
+
+{% endblock %}
+
+/**************************
+
+48. add the namespace becaouse could be posible to have more than one app and could have problems calling templates.
+in urls.py add the following:
+/**********************
+"""troja URL Configuration
+
+The `urlpatterns` list routes URLs to views. For more information please see:
+    https://docs.djangoproject.com/en/1.11/topics/http/urls/
+Examples:
+Function views
+    1. Add an import:  from my_app import views
+    2. Add a URL to urlpatterns:  url(r'^$', views.home, name='home')
+Class-based views
+    1. Add an import:  from other_app.views import Home
+    2. Add a URL to urlpatterns:  url(r'^$', Home.as_view(), name='home')
+Including another URLconf
+    1. Import the include() function: from django.conf.urls import url, include
+    2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
+"""
+from django.conf.urls import url, include
+from django.contrib import admin
+
+
+urlpatterns = [
+    url(r'^admin/', admin.site.urls),
+    url(r'^polls/', include(('polls.urls','polls'), namespace="polls")),
+]
+/*********************************
+
+49. add reference on index.html of the namespace 
+	 <li><a href = {% url "polls:detail" question.id%}><b>
+50. later of this add the form into detail.html as following:
+/*****************************************
+{% extends 'polls/base.html' %}
+{% block main_content %}
+<h1>{{question.question_text}} </h1>
+{% if error_message %}<p><strong> {{error_message}}</strong></p>{% endif %}
+
+<form action = "{% url 'polls:vote' question.id %}" method="post">
+    {% csrf_token %}  #to set the security into django way to the forms
+    {% for choice in question.choice_set.all %}
+        <input type="radio" name="choice" id="choice{{forloop.counter}}" value="{{choice.id}}">
+        <label for="choice{{forloop.counter}}">{{choice.choice_text}}</label><br>
+    {% endfor %}
+    <input type="submit" value="vote">
+</form>
+
+{% endblock %}
+/******************************************
+51. so, modify the vote function in views.py
+/**************
+def vote(request,question_id):
+    question = get_object_or_404(Question, pk = question_id)
+    try:
+        selected_choice = question.choice_set.get(pk = request.POST['choice'])
+    except:
+        return render(request,'polls/detail.html',{'question':question,'error_message':"Please select a choice"})
+    else:
+        selected_choice.votes +=1
+        selected_choice.save()
+
+        return HttpResponseRedirect(reverse('polls:results', args = (question.id,)))
+/*******************
+52. later modify results and detail
+/**************************
+from django.shortcuts import render, get_object_or_404
+
+from django.http import HttpResponse, HttpResponseRedirect
+from django.urls import reverse
+from django.template import loader, RequestContext
+from .models import Question
+
+# Create your views here.
+def index(request):
+    latest_questions = Question.objects.order_by('-pub_date')[:5]
+    context = {'latest_questions':latest_questions}
+    return render(request,'polls/index.html',context)
+
+def detail(request, question_id):
+    question = get_object_or_404(Question, pk = question_id)
+    return render(request,'polls/detail.html',{'question':question})
+
+def results(request,question_id):
+    question = get_object_or_404(Question, pk = question_id)
+    return render(request, 'polls/results.html',{'question':question})
+
+def vote(request,question_id):
+    question = get_object_or_404(Question, pk = question_id)
+    try:
+        selected_choice = question.choice_set.get(pk = request.POST['choice'])
+    except:
+        return render(request,'polls/detail.html',{'question':question,'error_message':"Please select a choice"})
+    else:
+        selected_choice.votes +=1
+        selected_choice.save()
+
+        return HttpResponseRedirect(reverse('polls:results', args = (question.id,)))
+
+/**************************
+53. now is required the results.html
+/**********************
+{% extends 'polls/base.html '%}
+{% block main_content %}
+<h1>{{question.question_text}} </h1>
+<ul>
+    {% for choice in question.choice_set.all %}
+    <li>{{choice.choice_text}}-- {{choice.votes}} vote{{choice.votes|pluralize}}</li>
+    {% endfor %}
+</ul>
+<a href= "{% url 'polls:detail' question.id %}">Vote Again</a>
+{% endblock %}
+/**********************
+54.////////////////////////////////////////9///////////////////////////////////
+55.For add css files is necesary create a directory static into polls app and polls into static.Add style.css
+/**********
+li a {
+    font-size: 20px;
+    color:blue;
+}
+/*************
+56. call the css from base.html
+/******************
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'polls/style.css' %}"/>
+</head>
+<body>
+<hr>
+<p> Header</p>
+<hr>
+
+{% block main_content %}
+{% endblock %}
+{% include "polls/footer.html" %}
+
+</body>
+</html>
+/******************
+57. later add an image. For this, create a directory images into static>polls> and add background.jpg "static>polls>images>baground.jpg"
+in style.css addthe following:
+
+li a {
+    font-size: 20px;
+    color:red;
+}
+
+body{
+    color: white;
+    background: white url("images/background.jpg") no-repeat;
+}
+58.///////////////////////10//////////////////////////
+Adding bootstrap
+59. doownload bootstrap zip. and past into  static>polls>
+60. later is able to use a template, go to bootstrap web page and select a template and view the code, copy the  3 first metatag and paste
+into the base.html of the templates. later use core css bootsrap. The base.html would be as following:
+/********************************
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+
+    <title>Title</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'polls/bootstrap-4.1.3-dist/css/bootstrap.min.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'polls/style.css' %}"/>
+</head>
+<body>
+<hr>
+<p> Header</p>
+<hr>
+
+{% block main_content %}
+{% endblock %}
+{% include "polls/footer.html" %}
+
+</body>
+</html>
+/***********************************
+61.add new header.html into templates and add the menu of code of the template of bootstrap
+/***********************
+<nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+      <a class="navbar-brand" href="#">Navbar</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item active">
+            <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Link</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link disabled" href="#">Disabled</a>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="http://example.com" id="dropdown01" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Dropdown</a>
+            <div class="dropdown-menu" aria-labelledby="dropdown01">
+              <a class="dropdown-item" href="#">Action</a>
+              <a class="dropdown-item" href="#">Another action</a>
+              <a class="dropdown-item" href="#">Something else here</a>
+            </div>
+          </li>
+        </ul>
+        <form class="form-inline my-2 my-lg-0">
+          <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search">
+          <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+        </form>
+      </div>
+    </nav>
+/***********************
+62. later include in base.html the header 
+/******************
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+
+    <title>Title</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'polls/bootstrap-4.1.3-dist/css/bootstrap.min.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'polls/style.css' %}"/>
+</head>
+<body>
+<hr>
+<p> Header</p>
+<hr>
+{% include "polls/header.html" %}
+{% block main_content %}
+{% endblock %}
+{% include "polls/footer.html" %}
+
+</body>
+</html>
+/******************
+63. later add the container in base.html
+/*******************
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+
+    <title>Title</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'polls/bootstrap-4.1.3-dist/css/bootstrap.min.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'polls/style.css' %}"/>
+</head>
+<body>
+<hr>
+<p> Header</p>
+<hr>
+{% include "polls/header.html" %}
+    <div class="jumbotron">
+        <div class="container">
+            
+            {% block main_content %}
+            {% endblock %}
+         
+        </div>
+    </div>
+   {% include "polls/footer.html" %}
+</body>
+</html>
+/*******************
+64. later would be able to eliminate the content into style.css/
+65. later is posible to add a title of the view code of the template and past in the index.html
+/************************************
+{% extends 'polls/base.html '%}
+{% block main_content %}
+ <h1 class="display-3">Choose a question</h1>
+{% if latest_questions %}
+    <ul>
+        {% for question in latest_questions %}
+            <li><a href = {% url "polls:detail" question.id %}><b>{{question.question_text}}</b></a></li>
+        {%endfor%}
+    </ul>
+{% else %}
+    <p>You don't have any questions.Please add some.</p>
+{% endif %}
+
+{% endblock %}
+/******************************************
+66. later copy the footer of the template and replace in footer.html for the followein code:
+
+ <footer class="container">
+      <p>&copy; Company 2017-2018</p>
+    </footer>
+67. change the class in detail for the button and add link for go to index
+/*********************
+{% extends 'polls/base.html' %}
+{% block main_content %}
+<h1>{{question.question_text}} </h1>
+{% if error_message %}<p><strong> {{error_message}}</strong></p>{% endif %}
+
+<form action = "{% url 'polls:vote' question.id %}" method="post">
+    {% csrf_token %}
+    {% for choice in question.choice_set.all %}
+        <input type="radio" name="choice" id="choice{{forloop.counter}}" value="{{choice.id}}">
+        <label for="choice{{forloop.counter}}">{{choice.choice_text}}</label><br>
+    {% endfor %}
+    <input type="submit" class="btn btn-success" value="vote">
+</form>
+<a href="{% url 'polls:index' %}"> <- Back to Question List</a>
+{% endblock %}
+/*********************
+68.
+69.
+70.
+
+////////
+
+
+*******************************************************************
