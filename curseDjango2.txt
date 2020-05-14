@@ -237,7 +237,9 @@ base.html
     <p>Mis trabajos</p>
 {% endblock %}
 
-18. template tags{% url %} usefull to change url in urls.py and no change in views because use names of urls.
+18. template tags{% url %} usefull to change url in urls.py and no change in views because use names of urls: like the following code.
+	<li><a href="{% url 'home' %}">Portada</a></li>
+
 	 
 19. Add the index of other template and change the things as about, home and others by the tags in base, later replace all of this index instead of base
 20. Create directory of folders static > core into the application to load the css js and others of the template (replace base.html for index.html of the template)
@@ -245,6 +247,9 @@ base.html
 	
 22. add dinamycs the tag of the images with a block baground as following in the base.html
 	style="background-image: url('{%block background%} {%endblock %}')">
+	so it could add other block as
+	{% block headers %}<h1>SOMETHING</h1>{% endblock %}
+
 23. add tag to load image in the previeous block from the home 
 
 {% extends 'core/base.html' %}
@@ -306,6 +311,7 @@ home
 {% endblock %}
 
 27. using the format of a template ofr contact about etc, it is needed to change its according the template in my contact, about etc...
+27.1 install pillow to manipulate the images
 28. Create a new application with name portfolio(to manage from the user)
 	python manage.py startapp portfolio
 29. in the modelss of the application porfolio add the next class
@@ -319,7 +325,9 @@ class Project(models.Model):
 
 30. add the application into settings.
 31. execute the next command
-python manage.py makemigrations
+
+	python manage.py makemigrations
+
 32. python manage.py migrate
 32.1 add in admin as :
 	admin.site.register(Shop)
