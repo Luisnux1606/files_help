@@ -324,11 +324,13 @@ class Project(models.Model):
     updated = models.DateTimeField(auto_now=True)
 
 30. add the application into settings.
+
 31. execute the next command
 
 	python manage.py makemigrations
 
 32. python manage.py migrate
+32.1 python manage.py createsuperuser
 32.1 add in admin as :
 	admin.site.register(Shop)
 33. PERSONALIZYNG THE ADMIN 
@@ -399,7 +401,7 @@ STATIC_URL = '/static/'
 #Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
-
+	37.1 add the upload_to=projects in file of image in the models.
 38. IN URLS.PY ADD
 
 """webpersonal URL Configuration

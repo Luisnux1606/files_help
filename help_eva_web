@@ -1,0 +1,14 @@
+created the project
+configurated languaje in settings.py
+create app core
+configurated with template
+	template tags(headers,title,content)
+	configurate te static 
+create app portfolio
+configurate to languaje of app, classes,files using vervose_name
+add more funcionalities of admin as created updated
+add media directory to add images, and configure in settings and in the file with upload_to
+add configuation to watch images in develop state.Use urls.py and settingsear
+add view of portfolio of core or others apps to the respective app, and configure the urls 
+Add views with lists and pass  these as parameters to one template,later configure templates to recive this lists, use fors, ifs etc.
+
