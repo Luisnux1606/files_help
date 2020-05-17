@@ -14,3 +14,5 @@ Add views with lists and pass  these as parameters to one template,later configu
 configure urls of each app in urls.py file and call from urls of the main project urls.py
 work with relationships 
 personalisate adminnistrator(show more columns,order by fields,etc)
+WORK WHIT ALL WITH PRECAUSION
+manage dictionaries, contexts
