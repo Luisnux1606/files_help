@@ -605,6 +605,7 @@ class PageAdmin(admin.ModelAdmin):
 
 
 creating the template sample.py
+---------------------------------
 
 {%extends 'core/base.html'%}
 {%block title%}Sample{%endblock%}
