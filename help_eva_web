@@ -15,4 +15,7 @@ configure urls of each app in urls.py file and call from urls of the main projec
 work with relationships, manage dictionaries contexts,template tags, use 'user'class to edit some model with url admin,use forms(send data and recuperate, fusione forms with templates)
 personalisate adminnistrator(show more columns,order by fields,etc)
 WORK WHIT ALL WITH PRECAUSION
-Install plugins, 'django-ckeditor'
+Install plugins, 'django-ckeditor' and pillow
+Buy the domain is in https://iwantmyname.com/
+configurate the cname of python into iwantmyname
+if you want buy the ssl...
